@@ -17,9 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with upolicy.  If not, see <http://www.gnu.org/licenses/>.
 
-if BUILD_LIB
 lib_LTLIBRARIES = libupolicy.la
-endif
 
 libupolicy_la_SOURCES = \
 	context.c \

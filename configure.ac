@@ -53,26 +53,6 @@ AC_PROG_CC
 AC_PROG_LIBTOOL
 
 dnl Build feature selection
-AC_ARG_ENABLE([kernel-module],
-  AS_HELP_STRING([--disable-kernel-module],
-    [disable building of the upolicy kernel module]),
-  [case "${enableval}" in
-    no) enable_kernel_module=no ;;
-    yes) enable_kernel_module=yes ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --disable-kernel-module) ;;
-   esac],
-   enable_kernel_module=yes)
-
-AC_ARG_ENABLE([library],
-  AS_HELP_STRING([--disable-library],
-    [disable building of the upolicy library]),
-  [case "${enableval}" in
-    no) enable_lib=no ;;
-    yes) enable_lib=yes ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --disable-library) ;;
-   esac],
-   enable_lib=yes)
-
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug],
     [enable debug build]),
@@ -118,64 +98,21 @@ AC_ARG_ENABLE([python],
    esac],
    enable_python=yes)
 
-dnl Check that at building of at least one of kernel-module and library
-dnl is enabled.
-AS_IF([test "x$enable_lib" == xno -a "x$enable_kernel_module" == xno],
-  AC_MSG_ERROR([Nothing to build selected. Please use only one of --disable-kernel-module or --disable-library]))
-
-KDIR_DEFAULT=/lib/modules/`uname -r`/build
-
-dnl kernel module conditional part
-AS_IF([test "x$enable_kernel_module" == xyes], [
-  AC_MSG_CHECKING(kernel build dir)
-  AC_ARG_WITH([kernel-build-dir],
-    [AS_HELP_STRING([--with-kernel-build-dir],
-      [location of the kernel build dir, defaults to $KDIR])],
-      [case $KDIR in
-       /*) KDIR="$withval" ;;
-        *) KDIR=$(pwd)/$withval ;;
-       esac],
-      [KDIR=$KDIR_DEFAULT])
-
-  AS_IF([test -f $KDIR/Kbuild -a -f $KDIR/Kconfig],
-    [],
-    [AC_MSG_RESULT(error)
-    AC_MSG_ERROR([Invalid kernel build dir $KDIR])])
-  AC_MSG_RESULT([$KDIR])
-  AC_SUBST(KDIR)
-
-  dnl Kernel lsmstub support
-  CPPFLAGS_OLD=$CPPFLAGS
-  CPPFLAGS=-I$KDIR/include
-  AC_CHECK_HEADER(linux/lsmstub.h,
-    lsmstub=yes,
-    lsmstub=no)
-  CPPFLAGS=$CPPFLAGS_OLD
-
-  AS_IF([test "x$lsmstub" == xno],
-    AC_MSG_ERROR([linux/lsmstub.h not found]))
-
-  dnl Configure include path for library
-  UPOLICY_CFLAGS="-I\$(abs_top_srcdir)/kernel/include"
-], [
-  AC_MSG_WARN([Missing checks for kernel module headers...])
-])
-
 AC_SUBST(UPOLICY_CFLAGS)
 
-dnl library conditional part
-AS_IF([test "x$enable_lib" == xyes], [
-  PKG_CHECK_MODULES([libnl3], [libnl-3.0 >= 3.0])
-  PKG_CHECK_MODULES([libnl3_genl], [libnl-genl-3.0 >= 3.0], 
-    have_libnl3_genl=yes, have_libnl3_genl=no)
-  AS_IF([test "x$have_libnl3_genl" == xno], [
-    dnl This could mean that we are either missing the library altogether
-    dnl or that it is "included" in libnl3.
-    dnl TODO: Add this check!
-  ])
-
-  AX_PTHREAD()
+dnl library dependency checks
+PKG_CHECK_MODULES([libnl3], [libnl-3.0 >= 3.0])
+PKG_CHECK_MODULES([libnl3_genl], [libnl-genl-3.0 >= 3.0], 
+  have_libnl3_genl=yes, have_libnl3_genl=no)
+AS_IF([test "x$have_libnl3_genl" == xno], [
+  dnl This could mean that we are either missing the library altogether
+  dnl or that it is "included" in libnl3.
+  dnl TODO: Add this check!
 ])
+
+AX_PTHREAD()
+
+dnl TODO: add kernel header checks!
 
 dnl Doxygen
 DX_HTML_FEATURE(ON)
@@ -219,8 +156,6 @@ AS_IF([test "x$enable_python" == xyes], [
 ])
 
 dnl Conditionals
-AM_CONDITIONAL(BUILD_KERNEL, test x$enable_kernel_module = xyes)
-AM_CONDITIONAL(BUILD_LIB, test x$enable_lib = xyes)
 AM_CONDITIONAL(BUILD_EXAMPLES, test x$enable_examples = xyes -a x$enable_lib = xyes)
 AM_CONDITIONAL(BUILD_APIDOC, test x$enable_apidoc = xyes)
 AM_CONDITIONAL(BUILD_PYTHON, test x$enable_lib = xyes -a x$enable_python = xyes)
@@ -230,10 +165,6 @@ AC_OUTPUT([
 	doc/Makefile
 	doc/apidoc/Doxyfile
 	doc/apidoc/Makefile
-	doc/kerneldoc/Makefile
-	kernel/Makefile
-	kernel/include/Makefile
-	kernel/include/kupolicy/netlink_version.h
 	examples/Makefile
 	examples/c/Makefile
 	lib/Makefile
@@ -250,16 +181,6 @@ AC_MSG_NOTICE([+ upolicy general])
 AC_MSG_NOTICE([  - version         : $UPOLICY_VERSION_MAJOR.$UPOLICY_VERSION_MINOR]) 
 AC_MSG_NOTICE([  - netlink version : $UPOLICY_NL_VERMAJOR.$UPOLICY_NL_VERMINOR])
 AC_MSG_NOTICE([  - debug build     : $enable_debug])
-AC_MSG_NOTICE([+ upolicy kernel module])
-AC_MSG_NOTICE([  - build           : $enable_kernel_module])
-dnl begin kernel conditional part
-AS_IF([test "x$enable_kernel_module" == xyes],
-  [
-AC_MSG_NOTICE([  - kernel bulddir  : $KDIR])
-  ])
-dnl end kernel conditional part
-AC_MSG_NOTICE([+ upolicy userspace library])
-AC_MSG_NOTICE([  - build           : $enable_lib])
 AC_MSG_NOTICE([+ upolicy Python bindings])
 AC_MSG_NOTICE([  - build           : $enable_python])
 AC_MSG_NOTICE([+ upolicy examples])

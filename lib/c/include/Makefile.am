@@ -17,7 +17,6 @@
 #  You should have received a copy of the GNU General Public License
 #  along with upolicy.  If not, see <http://www.gnu.org/licenses/>.
 
-if BUILD_LIB
 pkginclude_HEADERS = \
 	upolicy/context.h \
 	upolicy/core.h \
@@ -27,4 +26,3 @@ pkginclude_HEADERS = \
 	upolicy/version.h
 EXTRA_DIST = \
 	upolicy/internal.h
-endif
