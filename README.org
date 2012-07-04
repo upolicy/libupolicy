@@ -9,7 +9,7 @@ way, by making use of the Linux Security Module API.
 
 upolicy is actually comprised of two pieces of software:
 
-- a kernel module, which plugs into the LSM API and
+- a kernel extension, which uses the LSM framework,
 - a userspace library
 
 These two pieces communicate by the means of a generic netlink socket. The
@@ -28,12 +28,11 @@ You have been warned.
 
 *** Requirements
 
-- kernel with LSMStub patch (see below)
+- Linux kernel with upolicy patches and upolicy enabled (see below)
 - libnl >= 3.2 (specifically also the genl part)
 - automake, autoconf, libtool and friends (for building)
 - Python >= 2.7, < 3.0 for building the Python bindings
 - Doxygen for building the library documentation
-- Perl for building the kernel documentation
 
 
 *** Requirements (Ubuntu 12.04)
@@ -42,18 +41,13 @@ On Ubuntu 12.04 the following packages should do:
 
 apt-get install build-essential libnl-3-dev libnl-genl-3-dev python-all-dev automake autoconf libtool perl
 
-Additionally the LSMStub PPA is required:
-apt-add-repository ppa:speijnik/lsmstub-kernel
+*** Linux kernel with upolicy patches
 
-*** LSMStub kernel
-In upolicy's early development stage it is favorable to be able to load and
-unload the module at will. Unfortunately, this is not possible with the LSM
-API per-se, because it is not exported to loadable kernel modules.
-In short: upolicy requires a patched kernel, which implements the LSMStub
-API. Such kernels can be either found in code-form at [[https://github.com/speijnik/linux/tree/ubuntu_precise][github.com/speijnik/linux/]] or pre-compiled
-for Ubuntu 12.04 at [[https://launchpad.net/~speijnik/+archive/lsmstub-kernel][launchpad: LSMStub enabled kernels PPA]].
-Be warned that AppArmor is not enabled by default in the pre-built kernels, so do not use them on production systems.
+upolicy requires a set of kernel patches, which will be available from http://github.com/upolicy/linux in the future.
+If you want to test-drive upolicy, please use the old code from https://github.com/upolicy/libupolicy/tree/old/master.
+Please refer to the README.org file there, for a list of requirements and instructions
+for building.
 
 ** Documentation
 
-The upolicy documentation can be found at [[http://speijnik.github.com/upolicy/doc]].
+   The upolicy documentation can be found at [[http://speijnik.github.com/upolicy/doc]].
